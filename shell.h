@@ -18,7 +18,7 @@ typedef struct Redir {
     enum TokenType type;
     char *file;
     struct Redir *next;//c有自引用限制
-};//重定向链表
+}Redir;//重定向链表
 typedef struct {
     char *argv[128];
     int argc;
@@ -29,7 +29,7 @@ typedef struct {
     enum TokenType type;
     char *val;
 }Token;//创建结构体存储字符类型以及字符指针
-inline int tokenize(char *line,Token *token){
+static inline int tokenize(char *line,Token *token){
     int argc = 0;
     char *word=strtok(line , " \t\n");
     while (word != NULL) {
@@ -60,7 +60,7 @@ inline int tokenize(char *line,Token *token){
     return argc;
 }
 
-inline void execute(char ** argv) {
+static inline void execute(char ** argv) {
     if (argv[0] == NULL) return;
     pid_t pid = fork();
     if (pid ==0) {
@@ -70,7 +70,7 @@ inline void execute(char ** argv) {
     }else{wait(NULL);}
 }
 
-inline Cmd* parse_tokens_to_cmd(Token *toks) {
+static inline Cmd* parse_tokens_to_cmd(Token *toks) {
     Cmd *cmd=malloc(sizeof(Cmd));
     cmd->argc=0;
     cmd->redirs=NULL;
@@ -93,20 +93,23 @@ inline Cmd* parse_tokens_to_cmd(Token *toks) {
     }
     cmd->argv[cmd->argc]=NULL;
     return cmd;
-}//重定向
+}//重定向，构建Redir链表
 
-inline void apply_redirs(struct  Redir *redirs) {
-    struct Redir *r =redirs;//遍历指针
+static inline void apply_redirs(Redir *redirs) {
+    Redir *r = redirs;
     while (r != NULL) {
         int fd=-1;
         if (r->type == TOK_REDIR_IN) {
             fd=open(r->file,O_RDONLY);
+            if (fd < 0) { perror(r->file); exit(1); }
             dup2(fd,STDIN_FILENO);
         }else if (r->type == TOK_REDIR_OUT) {
             fd=open(r->file,O_WRONLY|O_CREAT|O_TRUNC,0644);
+            if (fd < 0) { perror(r->file); exit(1); }
             dup2(fd,STDOUT_FILENO);
         }else if (r->type == TOK_REDIR_APP) {
             fd=open(r->file,O_WRONLY|O_CREAT|O_APPEND,0644);
+            if (fd < 0) { perror(r->file); exit(1); }
             dup2(fd,STDOUT_FILENO);
         }
         if (fd>=0) close(fd);
@@ -114,7 +117,7 @@ inline void apply_redirs(struct  Redir *redirs) {
     }
 }//dup2应用重定向
 
-void execute_cmd(Cmd *cmd) {
+static inline void execute_cmd(Cmd *cmd) {
     if (cmd->argc==0) return;
     pid_t pid = fork();
     if (pid <0) {perror("fork");exit(1);}
@@ -122,8 +125,23 @@ void execute_cmd(Cmd *cmd) {
         apply_redirs(cmd->redirs);
         execvp(cmd->argv[0],cmd->argv);
         fprintf(stderr,"myshell: %s: command not found\n",cmd->argv[0]);
-        exit(1);
+        exit(127);
     }else {
         wait(NULL);
     }
+}//调用apply_redirs
+
+static inline void free_cmd(Cmd *cmd) {
+    if (cmd==NULL) return;
+    for (int i=0;i<cmd->argc;++i) {
+        free(cmd->argv[i]);
+    }
+    Redir *r = cmd->redirs;
+    while (r != NULL) {
+        Redir *next = r->next;
+        free(r->file);
+        free(r);
+        r=next;
+    }
+    free(cmd);
 }

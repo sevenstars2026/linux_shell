@@ -14,7 +14,7 @@ int main() {
         if (n == 0) continue;  // 空行
         Cmd *cmd =parse_tokens_to_cmd(toks);
         if (cmd->argc==0) {
-            free(cmd);
+            free_cmd(cmd);
             continue;
         }
         if (strcmp(cmd->argv[0],"exit")==0) {
@@ -24,7 +24,7 @@ int main() {
                 if (chdir(getenv("HOME")) != 0) perror("cd");
             }else if (chdir(cmd->argv[1]) != 0) perror("cd");
         }else{execute_cmd(cmd);}
-        free(cmd);
+        free_cmd(cmd);
     }
     return 0;
 }
