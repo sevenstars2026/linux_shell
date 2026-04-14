@@ -58,7 +58,7 @@ static inline int tokenize(char *line,Token *token){
     token[argc].type=TOK_END;
     token[argc].val=NULL;
     return argc;
-}
+}//输入切割分类
 
 static inline void execute(char ** argv) {
     if (argv[0] == NULL) return;
@@ -88,6 +88,8 @@ static inline Cmd* parse_tokens_to_cmd(Token *toks) {
                         new_node->type=toks[i].type;
                         cmd->redirs=new_node;
                         ++i;
+                    }else {
+                        fprintf(stderr,"syntax error: > without filename\n");
                     }
         }
     }

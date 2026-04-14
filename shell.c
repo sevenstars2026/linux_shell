@@ -6,7 +6,7 @@ int main() {
     Token toks[256];         // 栈上分配
 
     while (1) {
-        printf("myshell:%s> ", getcwd(my_path, 1024));
+        printf("shell:%s> ", getcwd(my_path, 1024));
         fflush(stdout);//清空缓冲区
         if (fgets(line, sizeof(line), stdin) == NULL) break;
         //分析输入类型
