@@ -1,0 +1,3 @@
+/home/sevenstars/CLionProjects/linux_shell/build/CMakeFiles/linux_shell.dir
+/home/sevenstars/CLionProjects/linux_shell/build/CMakeFiles/edit_cache.dir
+/home/sevenstars/CLionProjects/linux_shell/build/CMakeFiles/rebuild_cache.dir
